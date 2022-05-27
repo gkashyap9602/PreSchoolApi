@@ -39,23 +39,20 @@ async function Add_Classfun(req, res) {
 async function Student_addfun(req, res) {
   try {
   
-   const result = await ModelSeqenceStudent.findOne({Student_id:"Student_id"})
-   const seq_num = result.seq_num + 1
+  //  const result = await ModelSeqenceStudent.findOne({Student_id:"Student_id"})
+  //  const seq_num = result.seq_num + 1
     
     const Student_Data = req.body;
-    Object.assign(Student_Data,{roll_num:2000 + seq_num})
+    // Object.assign(Student_Data,{roll_num:2000 + seq_num})
     const student_img = req.file.path;
     Student_Data.student_img = student_img;
     const Student_Saved = await ModelNewStudent(Student_Data).save();
     const Student_id = Student_Saved._id
     console.log(Student_id)
 
-    const ree = await ModelSeqenceStudent.updateOne(
-    { Student_id:"Student_id" },
-    {$inc:{seq_num:1}})
-     
-    // seq_num.Student_id = Student_id 
-    // const SeqData = await ModelSeqenceStudent(seq_num).save()
+    // const ree = await ModelSeqenceStudent.updateOne(
+    // { Student_id:"Student_id" },
+    // {$inc:{seq_num:1}})
          
     res.status(201).send("Student Registered" + Student_Saved);
   } catch (error) {

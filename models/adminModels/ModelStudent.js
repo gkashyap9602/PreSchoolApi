@@ -46,9 +46,9 @@ const NewStudentSchema = new Schema({
   role:{
       type:String,default:3
   },
-  roll_num:{
-    type:Number, 
-  },
+  // roll_num:{
+  //   type:Number, 
+  // },
 
 });
 
