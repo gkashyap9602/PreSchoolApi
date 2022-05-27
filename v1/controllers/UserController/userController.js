@@ -115,10 +115,10 @@ async function NewUserFun(req, res) {
     //   generate random Otp codes each time
     const Otp_code = auth.random_Otpfun();
     const formdata = req.body;
-    const Profile_img = req.file.path;
+    // const Profile_img = req.file.path;
     if (!Profile_img) throw "file not access";
     formdata.Otp_code = Otp_code;
-    formdata.Profile_img = Profile_img;
+    // formdata.Profile_img = Profile_img;
     //Store New User Details in database
     const UserRegistered = await ModelSignupUser(formdata).save();
     res.status(201).send("User register Successfully" + UserRegistered);

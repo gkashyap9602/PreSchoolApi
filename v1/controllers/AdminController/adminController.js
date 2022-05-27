@@ -44,8 +44,8 @@ async function Student_addfun(req, res) {
     
     const Student_Data = req.body;
     // Object.assign(Student_Data,{roll_num:2000 + seq_num})
-    const student_img = req.file.path;
-    Student_Data.student_img = student_img;
+    // const student_img = req.file.path;
+    // Student_Data.student_img = student_img;
     const Student_Saved = await ModelNewStudent(Student_Data).save();
     const Student_id = Student_Saved._id
     console.log(Student_id)
