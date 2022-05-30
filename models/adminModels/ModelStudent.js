@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const NewStudentSchema = new Schema({
+const NewUsersSchema = new Schema({
   fname: {
     type: String,
-    required: true,
+    // required: true,
   },
   lname: {
     type: String,
@@ -12,45 +12,37 @@ const NewStudentSchema = new Schema({
      type:String,
      required:true
   },
-  password:{
-   type: String,
-   required:true
-  },
-  gender: {
-    type: String,
-  },
-  dob: {
-    type: String,
-  },
-  class: {
-    type: String,
-    // required: true,
-  },
-  religion: {
-    type: String,
-  },
-  joining_date: {
-    type: String,
-  },
   mobile_num: {
     type: Number,
     // required: true,
     unique: true,
   },
-  student_img: {
-    type: String,
+  password:{
+   type: String,
+   required:true
   },
-  section: {
-    type: String,
-  },
-  role:{
-      type:String,default:3
-  },
-  // roll_num:{
-  //   type:Number, 
-  // },
+  User_details:{
+    gender: {
+      type: String,
+    },
+    dob: {
+      type: String,
+    },
+    religion: {
+      type: String,
+    },
+    student_img: {
+      type: String,
+    },
+    role:{
+        type:String,default:3
+    },
+    // roll_num:{
+    //   type:Number, 
+    // },
+  }
 
 });
 
-const ModelNewStudent = new mongoose.model("NewStudents", NewStudentSchema);
-module.exports = { ModelNewStudent };
+const ModelNewUser = new mongoose.model("Registered_user", NewUsersSchema);
+module.exports = { ModelNewUser };

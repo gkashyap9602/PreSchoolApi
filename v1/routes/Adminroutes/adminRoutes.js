@@ -5,8 +5,9 @@ const Controller = require('../../controllers/index')
 const { FileUpload } = require('../../../Services/index')
 
 router.get('/helloadmin',Controller.AdminController.helloadmin)
-router.post('/addstudent',FileUpload.multerAdmin.single('student_img'),Controller.AdminController.Student_addfun)
+router.post('/newuser',FileUpload.multerAdmin.single('student_img'),Controller.AdminController.Newstd_Userfun)
 router.post('/addclass',FileUpload.multerAdmin.single('img'),Controller.AdminController.Add_Classfun)
-router.post('/feeupdate',FileUpload.multerAdmin.single('img'),Controller.AdminController.Fee_Update)
+router.post('/addstudent',FileUpload.multerAdmin.single('img'),Controller.AdminController.Student_addfun)
+router.get('/userdetails',Controller.AdminController.User_detailsfun)
 
 module.exports = router;

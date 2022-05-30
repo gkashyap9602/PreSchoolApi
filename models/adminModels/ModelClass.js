@@ -18,6 +18,6 @@ const NewClassSchema = new Schema ({
 
 })
 
-const ModelClass = new mongoose.model('ClassOrCource',NewClassSchema)
+const ModelClass = new mongoose.model('Class_Or_Cource',NewClassSchema)
 
 module.exports = {ModelClass}

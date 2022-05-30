@@ -1,5 +1,6 @@
 module.exports = {
-    NewStudentMOdel : require('./ModelStudent'),
+    NewStudentMOdel : require('./ModelAddStudent'),
+    NewUserModel:require('./ModelStudent'),
     AddClassModel : require('./ModelClass'),
     NewSequenceSchema: require('./ModelSequence')
 }
