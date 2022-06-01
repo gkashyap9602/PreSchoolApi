@@ -1,11 +1,10 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const NewUsersSchema = new Schema({
-  fname: {
-    type: String,
-    // required: true,
-  },
-  lname: {
+  role:{
+    type:Number,enum:[1,2,3]
+},
+  name: {
     type: String,
   },
   email:{
@@ -34,12 +33,6 @@ const NewUsersSchema = new Schema({
     student_img: {
       type: String,
     },
-    role:{
-        type:String,default:3
-    },
-    // roll_num:{
-    //   type:Number, 
-    // },
   }
 
 });

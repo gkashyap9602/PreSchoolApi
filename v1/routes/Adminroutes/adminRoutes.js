@@ -9,5 +9,8 @@ router.post('/newuser',FileUpload.multerAdmin.single('student_img'),Controller.A
 router.post('/addclass',FileUpload.multerAdmin.single('img'),Controller.AdminController.Add_Classfun)
 router.post('/addstudent',FileUpload.multerAdmin.single('img'),Controller.AdminController.Student_addfun)
 router.get('/userdetails',Controller.AdminController.User_detailsfun)
-
+router.get('/getclasses',Controller.AdminController.get_classes)
+router.post('/transaction',Controller.AdminController.Trans_historyfun)
+router.get('/oneclassdata',Controller.AdminController.AllStudentOfOneClass)
+router.get('/oneuserdata',Controller.AdminController.SingleUserDetail)
 module.exports = router;
