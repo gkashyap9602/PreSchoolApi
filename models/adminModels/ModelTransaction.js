@@ -3,8 +3,11 @@ const Schema = mongoose.Schema;
 const NewTransactionSchema = new Schema({
   fee_type: {
     type: Number,
-    enum: [1,2,3],
+    enum: [1,2,3,4],
   },
+  fee_of_month:{
+    type:String,
+},
   fee_amount: {
     type: Number,
   },

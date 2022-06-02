@@ -29,44 +29,44 @@ async function helloadmin(req, res) {
 }
 
 async function Trans_historyfun(req, res) {
-  console.log(req.body);
-  const Transac_details = req.body;
-
-  const id = Transac_details.student_id;
-  const fee = Transac_details.fee_amount;
-  const classid = Transac_details.class_id;
-  const feetype = Transac_details.fee_type
-
-  const findfee = await ModelClass.findOne({ _id: classid });
-  console.log(findfee);
-  const add_fee = findfee.addmission_fee;
-  const mon_fee = findfee.monthly_fee;
-  // const total_fee = add_fee + mon_fee;
-  // console.log(total_fee);
-
-  if (feetype == 1){
-    const balancefee = add_fee - fee
-
-    const Updatefee = await ModelNewStudent.updateOne(
-      { _id: id },
-      { $set: { due_fee: balancefee } }
-    );
-  }else if (feetype == 2){
-    const balancefee = add_fee - fee
-
-  }
-  
-  
-
   try {
+    // console.log(req.body);
+    const Transac_details = req.body;
 
-    // const remaining_fee = await ModelNewStudent.findOne({_id:id})
-    // console.log(remaining_fee.due_fee);
-    // const remainfee = remaining_fee.due_fee
-    
+    const id = Transac_details.student_id;
+    const fee = Transac_details.fee_amount;
+    const feetype = Transac_details.fee_type;
+
+    const findfee = await ModelClass.findOne({ _id: Transac_details.class_id });
+    const add_fee = findfee.addmission_fee;
+    const mon_fee = findfee.monthly_fee;
+
+    const remaining_fee = await ModelNewStudent.findOne({ _id: id });
+    console.log(remaining_fee.due_fee);
+    const due_fee = remaining_fee.due_fee;
+
+    if (feetype == 1) {
+      const balancefee = add_fee - fee;
+      const Updatefee = await ModelNewStudent.findByIdAndUpdate(id, {
+        due_fee: balancefee,
+      });
+
+    } else if (feetype == 2) {
+      const balancefee = mon_fee - fee;
+      const total_fee = due_fee + balancefee;
+      const Updatefee = await ModelNewStudent.findByIdAndUpdate(id, {
+        due_fee: total_fee,
+      });
+
+    } else if (feetype == 3) {
+      const total_due = due_fee - fee;
+      const Updatefee = await ModelNewStudent.findByIdAndUpdate(id, {
+        due_fee: total_due,
+      });
+    }
+
     const Transac_saved = await ModelTransaction(Transac_details).save();
-    res.status(201).send("Transac_saved" + Transac_saved);
-
+     res.status(201).send("Transac_saved" + Transac_saved);
   } catch (error) {
     res.status(401).send(error);
   }
@@ -77,7 +77,9 @@ async function SingleUserDetail(req, res) {
   // console.log(user_id);
 
   try {
-    const userdata = await ModelNewUser.find({ _id: user_id }, { password: 0 });
+    const userdata =
+     await ModelNewUser.find({ _id: user_id }, { password: 0 });
+    // await ModelNewStudent.findOne().populate({user_id:user_id})
     res.status(201).send(userdata);
   } catch (error) {
     res.status(401).send(error);
@@ -106,7 +108,7 @@ async function get_classes(req, res) {
 
 async function User_detailsfun(req, res) {
   try {
-    const userDetails = await ModelNewUser.find({ role: 2 }, "name mobile_num");
+    const userDetails = await ModelNewUser.find({ role: 3 }, "name mobile_num");
     res.status(200).send(userDetails);
   } catch (error) {
     res.status(401).send(error);
@@ -118,6 +120,10 @@ async function Student_addfun(req, res) {
     // console.log(req.body);
     const body = req.body;
     class_count = body.class;
+
+    const finduser = await ModelNewStudent.findOne({user_id:body.user_id})
+    if(finduser) throw "Student Already Registered"
+
     const countt = await ModelNewStudent.find({ class: class_count }).count();
     console.log(countt);
     Object.assign(body, { roll_num: class_count * 1000 + 1 + countt });
@@ -145,7 +151,13 @@ async function Newstd_Userfun(req, res) {
     const salt = await bcrypt.genSalt(10);
 
     const User_data = req.body;
-    console.log(User_data);
+    const email =  User_data.email
+    // const mobile_num  = User_data.mobile_num
+    // console.log(User_data);
+
+    const finduser = await ModelNewUser.findOne({email:email})
+    console.log(finduser);
+      if(finduser) throw  "User Already Registered"
     User_data.password = await bcrypt.hash(User_data.password, salt);
     // const student_img = req.file.path;
     // Student_Data.student_img = student_img;
