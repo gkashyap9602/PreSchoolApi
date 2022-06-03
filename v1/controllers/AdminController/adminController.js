@@ -13,6 +13,7 @@ const {
   ModelTransaction,
 } = require("../../../models/adminModels/ModelTransaction");
 const res = require("express/lib/response");
+const mongoose = require('mongoose')
 
 exports.Newstd_Userfun = Newstd_Userfun;
 exports.Add_Classfun = Add_Classfun;
@@ -76,10 +77,39 @@ async function SingleUserDetail(req, res) {
   const user_id = req.body.user_id;
   // console.log(user_id);
 
+//  try {
+   
+//   const data = await ModelNewStudent.aggregate([
+//     {
+//       $match:{
+//        user_id:mongoose.Types.ObjectId(user_id)
+//       }
+//     },
+//     {
+//       $lookup:{
+//         from:"registered_users",
+//         localField:"user_id",
+//         foreignField:"_id",
+//         as:"ShowUser"
+//       },
+      
+//     }
+//     // {
+//     //   $project:{
+//     //    User:"$ShowUser.email",
+       
+//     //   },
+//     // },
+//   ])
+//   res.status(201).send(data)
+// } catch (error) {
+//   res.status(400).send(error)
+// }
+
   try {
     const userdata =
      await ModelNewUser.find({ _id: user_id }, { password: 0 });
-    // await ModelNewStudent.findOne().populate({user_id:user_id})
+    // await ModelNewStudent.findOne({ user_id: user_id }).populate('user_id')
     res.status(201).send(userdata);
   } catch (error) {
     res.status(401).send(error);
@@ -122,7 +152,8 @@ async function Student_addfun(req, res) {
     class_count = body.class;
 
     const finduser = await ModelNewStudent.findOne({user_id:body.user_id})
-    if(finduser) throw "Student Already Registered"
+    if(finduser.class == class_count && finduser.user_id) throw "Student Already Registered"
+    console.log(finduser);
 
     const countt = await ModelNewStudent.find({ class: class_count }).count();
     console.log(countt);
