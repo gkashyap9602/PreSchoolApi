@@ -17,4 +17,4 @@ app.use(express.static('views'));
 // app.use('/static', express.static(path.join(__dirname, './views')));
 app.use(cors());
 //app.use(multer().array())
-app.use('/api', route);
+app.use('/api/v1', route);

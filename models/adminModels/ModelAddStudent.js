@@ -7,9 +7,9 @@ const NewStudentSchema = new Schema({
   roll_num: {
     type: Number,
   },
-  class: {
-    type: Number,
-  },
+  // class: {
+  //   type: Number,
+  // },
   user_id: {
     type: Schema.Types.ObjectId,
     ref: "registered_users",

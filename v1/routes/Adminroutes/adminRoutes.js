@@ -5,12 +5,26 @@ const Controller = require('../../controllers/index')
 const { FileUpload } = require('../../../Services/index')
 
 router.get('/helloadmin',Controller.AdminController.helloadmin)
-router.post('/newuser',FileUpload.multerAdmin.single('student_img'),Controller.AdminController.Newstd_Userfun)
-router.post('/addclass',FileUpload.multerAdmin.single('img'),Controller.AdminController.Add_Classfun)
-router.post('/addstudent',FileUpload.multerAdmin.single('img'),Controller.AdminController.Student_addfun)
-router.get('/userdetails',Controller.AdminController.User_detailsfun)
+
+router.post('/create/user',FileUpload.multerAdmin.single('student_img'),Controller.AdminController.Newstd_Userfun)
+router.patch('/update/user/:id',Controller.AdminController.Update_userfun)
+router.delete('/delete/user/:id',Controller.AdminController.Delete_Userfun)
+
+router.post('/create/class',FileUpload.multerAdmin.single('img'),Controller.AdminController.Add_Classfun)
+router.patch('/update/class/:id',Controller.AdminController.Update_classfun)
+router.delete('/delete/class/:id',Controller.AdminController.Delete_classfun)
+
+router.post('/create/student',FileUpload.multerAdmin.single('img'),Controller.AdminController.Student_addfun)
+
+router.get('/getusers',Controller.AdminController.User_detailsfun)
+router.get('/getoneuser',Controller.AdminController.SingleUserDetail)
+
 router.get('/getclasses',Controller.AdminController.get_classes)
-router.post('/transaction',Controller.AdminController.Trans_historyfun)
-router.get('/oneclassdata',Controller.AdminController.AllStudentOfOneClass)
-router.get('/oneuserdata',Controller.AdminController.SingleUserDetail)
+router.get('/get/oneclassdata',Controller.AdminController.AllStudentOfOneClass)
+
+router.post('/create/transaction',Controller.AdminController.Trans_historyfun)
+
+
+
+
 module.exports = router;

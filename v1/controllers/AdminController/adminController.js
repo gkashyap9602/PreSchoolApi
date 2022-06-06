@@ -13,7 +13,7 @@ const {
   ModelTransaction,
 } = require("../../../models/adminModels/ModelTransaction");
 const res = require("express/lib/response");
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
 exports.Newstd_Userfun = Newstd_Userfun;
 exports.Add_Classfun = Add_Classfun;
@@ -24,9 +24,84 @@ exports.get_classes = get_classes;
 exports.Trans_historyfun = Trans_historyfun;
 exports.AllStudentOfOneClass = AllStudentOfOneClass;
 exports.SingleUserDetail = SingleUserDetail;
+exports.Update_userfun = Update_userfun;
+exports.Delete_Userfun = Delete_Userfun;
+exports.Update_classfun = Update_classfun;
+exports.Delete_classfun = Delete_classfun;
 
 async function helloadmin(req, res) {
   res.send("hello admin");
+}
+
+async function Delete_classfun(req, res) {
+  try {
+    const class_id = req.params.id;
+    // console.log(_id);
+    const find = await ModelClass.findOne({ _id: class_id });
+    if (!find) throw " class does  not exist ";
+
+    const deleted = await ModelClass.findByIdAndDelete(class_id);
+    res.status(201).send("Class deleted successfully ");
+  } catch (error) {
+    // console.log("something not right" + error);
+    res.status(401).send("Something not right" + error);
+  }
+}
+
+async function Update_classfun(req, res) {
+  try {
+    const class_id = req.params.id;
+
+    const find = await ModelClass.findOne({ _id: class_id });
+    if (!find) throw " class does  not exist ";
+
+    const UserUpdated = await ModelClass.findByIdAndUpdate(class_id, req.body, {
+      new: true,
+    });
+    res.status(201).send("class Updated successfully");
+  } catch (error) {
+    // console.log("something not right" + error);
+    res.status(401).send("Something not right" + error);
+  }
+}
+
+async function Delete_Userfun(req, res) {
+  try {
+    const user_id = req.params.id;
+    console.log(user_id);
+
+    const find = await ModelNewUser.findOne({ _id: user_id });
+    if (!find) throw " User does  not exist ";
+
+    const deleted = await ModelNewUser.findByIdAndDelete(user_id);
+    res.status(201).send("User deleted successfully ");
+  } catch (error) {
+    // console.log("something not right" + error);
+    res.status(401).send("Something not right" + error);
+  }
+}
+
+async function Update_userfun(req, res) {
+  try {
+    const user_id = req.params.id;
+    const body = req.body;
+    console.log(body);
+    const find = await ModelNewUser.findOne({ _id: user_id });
+    if (!find) throw " User does  not exist ";
+
+    // const UserUpdated = await ModelNewUser.updateOne({_id:user_id},$set:{})
+    const UserUpdated = await ModelNewUser.findByIdAndUpdate(
+      user_id,
+      req.body,
+      {
+        new: true,
+      }
+    );
+    res.status(201).send("User Updated successfully");
+  } catch (error) {
+    // console.log("something not right" + error);
+    res.status(401).send("Something not right" + error);
+  }
 }
 
 async function Trans_historyfun(req, res) {
@@ -51,14 +126,12 @@ async function Trans_historyfun(req, res) {
       const Updatefee = await ModelNewStudent.findByIdAndUpdate(id, {
         due_fee: balancefee,
       });
-
     } else if (feetype == 2) {
       const balancefee = mon_fee - fee;
       const total_fee = due_fee + balancefee;
       const Updatefee = await ModelNewStudent.findByIdAndUpdate(id, {
         due_fee: total_fee,
       });
-
     } else if (feetype == 3) {
       const total_due = due_fee - fee;
       const Updatefee = await ModelNewStudent.findByIdAndUpdate(id, {
@@ -67,7 +140,7 @@ async function Trans_historyfun(req, res) {
     }
 
     const Transac_saved = await ModelTransaction(Transac_details).save();
-     res.status(201).send("Transac_saved" + Transac_saved);
+    res.status(201).send("Transac_saved" + Transac_saved);
   } catch (error) {
     res.status(401).send(error);
   }
@@ -77,38 +150,37 @@ async function SingleUserDetail(req, res) {
   const user_id = req.body.user_id;
   // console.log(user_id);
 
-//  try {
-   
-//   const data = await ModelNewStudent.aggregate([
-//     {
-//       $match:{
-//        user_id:mongoose.Types.ObjectId(user_id)
-//       }
-//     },
-//     {
-//       $lookup:{
-//         from:"registered_users",
-//         localField:"user_id",
-//         foreignField:"_id",
-//         as:"ShowUser"
-//       },
-      
-//     }
-//     // {
-//     //   $project:{
-//     //    User:"$ShowUser.email",
-       
-//     //   },
-//     // },
-//   ])
-//   res.status(201).send(data)
-// } catch (error) {
-//   res.status(400).send(error)
-// }
+  //  try {
+
+  //   const data = await ModelNewStudent.aggregate([
+  //     {
+  //       $match:{
+  //        user_id:mongoose.Types.ObjectId(user_id)
+  //       }
+  //     },
+  //     {
+  //       $lookup:{
+  //         from:"registered_users",
+  //         localField:"user_id",
+  //         foreignField:"_id",
+  //         as:"ShowUser"
+  //       },
+
+  //     }
+  //     // {
+  //     //   $project:{
+  //     //    User:"$ShowUser.email",
+
+  //     //   },
+  //     // },
+  //   ])
+  //   res.status(201).send(data)
+  // } catch (error) {
+  //   res.status(400).send(error)
+  // }
 
   try {
-    const userdata =
-     await ModelNewUser.find({ _id: user_id }, { password: 0 });
+    const userdata = await ModelNewUser.find({ _id: user_id }, { password: 0 });
     // await ModelNewStudent.findOne({ user_id: user_id }).populate('user_id')
     res.status(201).send(userdata);
   } catch (error) {
@@ -120,7 +192,12 @@ async function AllStudentOfOneClass(req, res) {
   const classid = req.body.class_id;
 
   try {
-    const OneStd_Data = await ModelNewStudent.find({ class_id: classid });
+    const OneStd_Data = await ModelNewStudent.find(
+      { class_id: classid },
+      { class_id: 0 }
+    );
+    //  console.log(OneStd_Data[0]);
+
     res.status(201).send(OneStd_Data);
   } catch (error) {
     res.status(401).send(error);
@@ -129,7 +206,10 @@ async function AllStudentOfOneClass(req, res) {
 
 async function get_classes(req, res) {
   try {
-    const get_classes = await ModelClass.find();
+    const get_classes = await ModelClass.find(
+      {},
+      { addmission_fee: 0, monthly_fee: 0 }
+    );
     res.status(201).send(get_classes);
   } catch (error) {
     res.status(401).send(error);
@@ -149,19 +229,30 @@ async function Student_addfun(req, res) {
   try {
     // console.log(req.body);
     const body = req.body;
-    class_count = body.class;
 
-    const finduser = await ModelNewStudent.findOne({user_id:body.user_id})
-    if(finduser.class == class_count && finduser.user_id) throw "Student Already Registered"
-    console.log(finduser);
+    const className = await ModelClass.findById({ _id: body.class_id });
+    //  console.log(className);
 
-    const countt = await ModelNewStudent.find({ class: class_count }).count();
-    console.log(countt);
-    Object.assign(body, { roll_num: class_count * 1000 + 1 + countt });
+    class_count = className.class;
 
-    const savedata = await ModelNewStudent(body).save();
+    const finduser = await ModelNewStudent.find({
+      user_id: mongoose.Types.ObjectId(body.user_id),
+      class_id: body.class_id,
+    });
+    // console.log(finduser, "find user");
+    if (finduser.length > 0) {
+      console.log("already");
+      throw "student already registered with same class";
+    } else if (finduser.length == 0) {
+      const countt = await ModelNewStudent.find({
+        class_id: body.class_id,
+      }).count();
+      // console.log(countt,"same class count");
 
-    res.status(201).send("class added successfully" + savedata);
+      Object.assign(body, { roll_num: class_count * 1000 + 1 + countt });
+      const savedata = await ModelNewStudent(body).save();
+      res.status(201).send("Student added successfully" + savedata);
+    }
   } catch (error) {
     res.status(401).send(error);
   }
@@ -182,16 +273,17 @@ async function Newstd_Userfun(req, res) {
     const salt = await bcrypt.genSalt(10);
 
     const User_data = req.body;
-    const email =  User_data.email
+    const email = User_data.email;
     // const mobile_num  = User_data.mobile_num
     // console.log(User_data);
 
-    const finduser = await ModelNewUser.findOne({email:email})
+    const finduser = await ModelNewUser.findOne({ email: email });
     console.log(finduser);
-      if(finduser) throw  "User Already Registered"
+    if (finduser) throw " User Already Registered";
     User_data.password = await bcrypt.hash(User_data.password, salt);
     // const student_img = req.file.path;
     // Student_Data.student_img = student_img;
+
     const Student_Saved = await ModelNewUser(User_data).save();
 
     res.status(201).send("Student Registered" + Student_Saved);

@@ -20,11 +20,11 @@ const NewUsersSchema = new Schema({
    type: String,
    required:true
   },
-  User_details:{
+  // User_details:{
     gender: {
       type: String,
     },
-    dob: {
+    father_name: {
       type: String,
     },
     religion: {
@@ -33,7 +33,7 @@ const NewUsersSchema = new Schema({
     student_img: {
       type: String,
     },
-  }
+  // }
 
 });
 
