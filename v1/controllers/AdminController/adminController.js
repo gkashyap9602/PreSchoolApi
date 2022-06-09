@@ -14,6 +14,7 @@ const {
 } = require("../../../models/adminModels/ModelTransaction");
 const res = require("express/lib/response");
 const mongoose = require("mongoose");
+const { ModelSignupUser } = require("../../../models/userModels/ModelSignup");
 
 exports.Newstd_Userfun = Newstd_Userfun;
 exports.Add_Classfun = Add_Classfun;
@@ -28,9 +29,151 @@ exports.Update_userfun = Update_userfun;
 exports.Delete_Userfun = Delete_Userfun;
 exports.Update_classfun = Update_classfun;
 exports.Delete_classfun = Delete_classfun;
+exports.Pagination_transaction = Pagination_transaction;
+exports.transaction_of_last_days = transaction_of_last_days;
+exports.filter_Bydatefun = filter_Bydatefun;
+exports.Totalfee_of_last_days = Totalfee_of_last_days;
+exports.Filter_transac_by_class = Filter_transac_by_class;
 
 async function helloadmin(req, res) {
   res.send("hello admin");
+}
+
+async function Filter_transac_by_class(req, res) {
+  try {
+    const class_id = req.query.class_id;
+    if (!class_id) throw "please insert valid id";
+    if (class_id.length < 24) throw " invalid id please check";
+
+    console.log(class_id);
+    const transac = await ModelTransaction.find({ class_id: class_id });
+    console.log(transac);
+    if (transac.length === 0) throw "  transaction not found";
+    res.status(200).send(`total: ${transac.length} ${transac} `);
+  } catch (error) {
+    res.status(400).send("Something not right " + error);
+  }
+}
+
+
+async function Totalfee_of_last_days(req, res) {
+  try {
+    var Total = []
+    for (let index = 1; index <= 4; index++) {
+      let date = new Date();
+
+      if (index === 1) {
+        date.setDate(date.getDate() - 7);
+        console.log(date, "date when index 1");
+      } else if (index === 2) {
+        date.setDate(date.getDate() - 30);
+        console.log(date, "date when index 2");
+      } else if (index === 3) {
+        date.setHours(0, 0, 0);
+        console.log(date.toString(), "tdate when index 3");
+      }else if (index === 4){
+        const data = await ModelTransaction.findOne()
+        date = new Date(data.createdAt)
+        // console.log(data.createdAt,"created");
+      }
+      console.log(date, "find side");
+      const findPay = await ModelTransaction.find({
+        updatedAt: { $gte: date },
+      });
+      var totalFeePaid = findPay.reduce(function (sum, fee) {
+        const updatedSum = sum + fee.fee_amount;
+        return updatedSum;
+      }, 0);
+       Total.push(totalFeePaid)
+    }
+    //----------------------- loop over
+    let PastDaysTotal = {
+      Today: Total[2],
+      Last7Days: Total[0],
+      Last30Days: Total[1],
+      GrandTotal: Total[3],
+    };
+
+    console.log(PastDaysTotal, "fee total obj");
+    console.log(totalFeePaid, "total");
+    res.status(200).send("totalFeePaid: " + JSON.stringify(PastDaysTotal));
+  } catch (error) {
+    res.status(400).send("Something not right " + error);
+  }
+
+
+
+
+}
+
+async function filter_Bydatefun(req, res) {
+  try {
+    const from_date = req.query.from_date;
+    const to_date = req.query.to_date;
+
+    const startDate = new Date(from_date);
+    const endDate = new Date(to_date);
+
+    endDate.setDate(endDate.getDate() + 1);
+    console.log(startDate, "startdate");
+    console.log(endDate, "endate");
+
+    const find_bydate = await ModelSignupUser.find({
+      updatedAt: { $gte: startDate, $lte: endDate },
+    });
+
+    if (find_bydate.length === 0)
+      throw " transactions not found of this date period";
+    res.status(200).send("total :" + find_bydate.length + find_bydate);
+  } catch (error) {
+    res.status(400).send("Something not right " + error);
+  }
+}
+
+async function transaction_of_last_days(req, res) {
+  try {
+    const total_days = req.query.days;
+
+    if(total_days == 0 ) throw  " please enter valid number of day"
+    console.log(typeof total_days);
+    let date = new Date();
+    date.setDate(date.getDate() - total_days);
+    console.log(date);
+    const findPay = await ModelTransaction.find({
+      updatedAt: { $lte: new Date(), $gte: date },
+    });
+    if (findPay.length === 0)
+      throw ` no transactions are available of last ${total_days} days`;
+    res.status(200).send("total: " + findPay.length + findPay);
+  } catch (error) {
+    res.status(400).send("Something not right " + error);
+  }
+}
+
+async function Pagination_transaction(req, res) {
+  try {
+    const page = req.query.page;
+    const limit = req.query.limit;
+
+    if (page == 0 || limit == 0)
+      throw " page or limit value must greater than 0";
+
+    // console.log(page,limit);
+    const transac_history = await ModelTransaction.find()
+      .limit(limit)
+      .skip((page - 1) * limit);
+    // console.log(transac_history);
+    if (transac_history.length == 0) throw " no more entries are available";
+
+    // transac_history.forEach(function(element){
+    //   console.log(element.class_id);
+
+    // })
+
+    res.status(201).send("total : " + transac_history.length + transac_history);
+  } catch (error) {
+    res.status(401).send("Something not right" + error);
+  }
 }
 
 async function Delete_classfun(req, res) {
@@ -271,11 +414,16 @@ async function Add_Classfun(req, res) {
 async function Newstd_Userfun(req, res) {
   try {
     const salt = await bcrypt.genSalt(10);
-
     const User_data = req.body;
     const email = User_data.email;
-    // const mobile_num  = User_data.mobile_num
-    // console.log(User_data);
+
+    const today = new Date();
+    const year = today.getFullYear().toString();
+    const yearcode = parseInt(year.slice(-2));
+    const usercount = await ModelNewUser.find({ role: 3 }).count();
+    const count = (usercount + 1).toString();
+    const usercode = count.padStart(2, 0);
+    // console.log(usercode);
 
     const finduser = await ModelNewUser.findOne({ email: email });
     console.log(finduser);
@@ -284,11 +432,57 @@ async function Newstd_Userfun(req, res) {
     // const student_img = req.file.path;
     // Student_Data.student_img = student_img;
 
-    const Student_Saved = await ModelNewUser(User_data).save();
+    Object.assign(User_data, { username: "PS" + yearcode + usercode });
 
+    const Student_Saved = await ModelNewUser(User_data).save();
     res.status(201).send("Student Registered" + Student_Saved);
   } catch (error) {
     console.log(error);
     res.status(400).send("error" + error);
   }
 }
+
+
+// try {
+//   var Total = []
+//   for (let index = 1; index <= 4; index++) {
+//     let date = new Date();
+
+//     if (index === 1) {
+//       date.setDate(date.getDate() - 7);
+//       console.log(date, "date when index 1");
+//     } else if (index === 2) {
+//       date.setDate(date.getDate() - 30);
+//       console.log(date, "date when index 2");
+//     } else if (index === 3) {
+//       date.setHours(0, 0, 0);
+//       console.log(date.toString(), "tdate when index 3");
+//     }else if (index === 4){
+//       const data = await ModelTransaction.findOne()
+//       date = new Date(data.createdAt)
+//       // console.log(data.createdAt,"created");
+//     }
+//     console.log(date, "find side");
+//     const findPay = await ModelTransaction.find({
+//       updatedAt: { $gte: date },
+//     });
+//     var totalFeePaid = findPay.reduce(function (sum, fee) {
+//       const updatedSum = sum + fee.fee_amount;
+//       return updatedSum;
+//     }, 0);
+//      Total.push(totalFeePaid)
+//   }
+//   //----------------------- loop over
+//   let PastDaysTotal = {
+//     Today: Total[2],
+//     Last7Days: Total[0],
+//     Last30Days: Total[1],
+//     GrandTotal: Total[3],
+//   };
+
+//   console.log(PastDaysTotal, "fee total obj");
+//   console.log(totalFeePaid, "total");
+//   res.status(200).send("totalFeePaid: " + JSON.stringify(PastDaysTotal));
+// } catch (error) {
+//   res.status(400).send("Something not right " + error);
+// }

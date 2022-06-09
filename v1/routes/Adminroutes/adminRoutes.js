@@ -23,8 +23,10 @@ router.get('/classes',Controller.AdminController.get_classes)
 router.get('/oneclassdata',Controller.AdminController.AllStudentOfOneClass)
 
 router.post('/transaction/create',Controller.AdminController.Trans_historyfun)
-
-
-
+router.get('/transaction/history',Controller.AdminController.Pagination_transaction)
+router.get('/transaction/filter/pastdays',Controller.AdminController.transaction_of_last_days)
+router.get('/transaction/filter/bydate',Controller.AdminController.filter_Bydatefun)
+router.get('/transaction/filter/totalfee',Controller.AdminController.Totalfee_of_last_days)
+router.get('/transaction/filter/class',Controller.AdminController.Filter_transac_by_class)
 
 module.exports = router;
