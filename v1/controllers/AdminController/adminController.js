@@ -55,55 +55,78 @@ async function Filter_transac_by_class(req, res) {
   }
 }
 
-
 async function Totalfee_of_last_days(req, res) {
   try {
-    var Total = []
+    const class_id = req.query.class_id;
+    // console.log(class_id);
+    var match_Condition;
+    var Total = [];
+
     for (let index = 1; index <= 4; index++) {
       let date = new Date();
 
       if (index === 1) {
         date.setDate(date.getDate() - 7);
-        console.log(date, "date when index 1");
+        // console.log(date, "date when index 1");
       } else if (index === 2) {
         date.setDate(date.getDate() - 30);
-        console.log(date, "date when index 2");
+        // console.log(date, "date when index 2");
       } else if (index === 3) {
         date.setHours(0, 0, 0);
-        console.log(date.toString(), "tdate when index 3");
-      }else if (index === 4){
-        const data = await ModelTransaction.findOne()
-        date = new Date(data.createdAt)
-        // console.log(data.createdAt,"created");
+        // console.log(date.toString(), "tdate when index 3");
+      } else if (index === 4) {
+        const data = await ModelTransaction.findOne();
+        date = new Date(data.createdAt);
+        // console.log(data.createdAt, "created index 4");
       }
-      console.log(date, "find side");
-      const findPay = await ModelTransaction.find({
-        updatedAt: { $gte: date },
-      });
-      var totalFeePaid = findPay.reduce(function (sum, fee) {
-        const updatedSum = sum + fee.fee_amount;
-        return updatedSum;
-      }, 0);
-       Total.push(totalFeePaid)
+
+      if (class_id == undefined) {
+        match_Condition = { $match: { updatedAt: { $gte: date } } };
+      } else {
+        match_Condition = {
+          $match: {
+            updatedAt: { $gte: date },
+            class_id: mongoose.Types.ObjectId(class_id),
+          },
+        };
+      }
+      var result = await ModelTransaction.aggregate([
+        match_Condition,
+        {
+          $group: {
+            _id: null,
+            total: {
+              $sum: "$fee_amount",
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            total: 1,
+          },
+        },
+      ]);
+
+      if (result.length === 0) {
+        result.push(0);
+      }
+      Total.push(result);
     }
-    //----------------------- loop over
+
     let PastDaysTotal = {
       Today: Total[2],
       Last7Days: Total[0],
       Last30Days: Total[1],
       GrandTotal: Total[3],
     };
-
-    console.log(PastDaysTotal, "fee total obj");
-    console.log(totalFeePaid, "total");
-    res.status(200).send("totalFeePaid: " + JSON.stringify(PastDaysTotal));
+    // console.log(result, "result");
+    console.log(Total, "total ar");
+    
+    res.status(200).send(`total ${JSON.stringify(PastDaysTotal)}`);
   } catch (error) {
     res.status(400).send("Something not right " + error);
   }
-
-
-
-
 }
 
 async function filter_Bydatefun(req, res) {
@@ -134,7 +157,7 @@ async function transaction_of_last_days(req, res) {
   try {
     const total_days = req.query.days;
 
-    if(total_days == 0 ) throw  " please enter valid number of day"
+    if (total_days == 0) throw " please enter valid number of day";
     console.log(typeof total_days);
     let date = new Date();
     date.setDate(date.getDate() - total_days);
@@ -164,11 +187,6 @@ async function Pagination_transaction(req, res) {
       .skip((page - 1) * limit);
     // console.log(transac_history);
     if (transac_history.length == 0) throw " no more entries are available";
-
-    // transac_history.forEach(function(element){
-    //   console.log(element.class_id);
-
-    // })
 
     res.status(201).send("total : " + transac_history.length + transac_history);
   } catch (error) {
@@ -324,7 +342,6 @@ async function SingleUserDetail(req, res) {
 
   try {
     const userdata = await ModelNewUser.find({ _id: user_id }, { password: 0 });
-    // await ModelNewStudent.findOne({ user_id: user_id }).populate('user_id')
     res.status(201).send(userdata);
   } catch (error) {
     res.status(401).send(error);
@@ -339,8 +356,6 @@ async function AllStudentOfOneClass(req, res) {
       { class_id: classid },
       { class_id: 0 }
     );
-    //  console.log(OneStd_Data[0]);
-
     res.status(201).send(OneStd_Data);
   } catch (error) {
     res.status(401).send(error);
@@ -370,14 +385,11 @@ async function User_detailsfun(req, res) {
 
 async function Student_addfun(req, res) {
   try {
-    // console.log(req.body);
     const body = req.body;
 
     const className = await ModelClass.findById({ _id: body.class_id });
     //  console.log(className);
-
     class_count = className.class;
-
     const finduser = await ModelNewStudent.find({
       user_id: mongoose.Types.ObjectId(body.user_id),
       class_id: body.class_id,
@@ -441,6 +453,11 @@ async function Newstd_Userfun(req, res) {
     res.status(400).send("error" + error);
   }
 }
+
+
+
+
+
 
 
 // try {
