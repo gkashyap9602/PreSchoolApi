@@ -1,5 +1,6 @@
 
 const mongoose = require("mongoose");
+
 const url = "mongodb+srv://gkashyap9602:anilkush@cluster0.hp9xj.mongodb.net/SchoolDatabase?retryWrites=true&w=majority"
 
 // "mongodb://localhost:27017/blockbrew"

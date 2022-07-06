@@ -1,20 +1,15 @@
-const { ModelClass } = require("../../../models/adminModels/ModelClass");
-const {
-  ModelSeqenceStudent,
-} = require("../../../models/adminModels/ModelSequence");
-const { ModelNewUser } = require("../../../models/adminModels/ModelStudent");
-const Models = require("../../../models/index");
 const bcrypt = require("bcrypt");
-const {
-  ModelNewStudent,
-} = require("../../../models/adminModels/ModelAddStudent");
-const req = require("express/lib/request");
-const {
-  ModelTransaction,
-} = require("../../../models/adminModels/ModelTransaction");
-const res = require("express/lib/response");
 const mongoose = require("mongoose");
-const { ModelSignupUser } = require("../../../models/userModels/ModelSignup");
+const Models = require("../../../models/index");
+
+const { ModelClass } = require("../../../models/adminModels/ModelClass");
+const { ModelNewUser } = require("../../../models/adminModels/ModelStudent");
+const {ModelNewStudent,} = require("../../../models/adminModels/ModelAddStudent");
+const req = require("express/lib/request");
+const { ModelTransaction,} = require("../../../models/adminModels/ModelTransaction");
+const res = require("express/lib/response");
+const UTILS = require("../../../Utils/messages");
+const helperFun = require("../../../Utils/helperFun");
 
 exports.Newstd_Userfun = Newstd_Userfun;
 exports.Add_Classfun = Add_Classfun;
@@ -35,29 +30,52 @@ exports.filter_Bydatefun = filter_Bydatefun;
 exports.Totalfee_of_last_days = Totalfee_of_last_days;
 exports.Filter_transac_by_class = Filter_transac_by_class;
 
+// require('express-async-errors')
+
 async function helloadmin(req, res) {
   res.send("hello admin");
 }
 
 async function Filter_transac_by_class(req, res) {
   try {
-    const class_id = req.query.class_id;
-    if (!class_id) throw "please insert valid id";
-    if (class_id.length < 24) throw " invalid id please check";
+    const class_id = req.params.id;
+    const errr = helperFun.object_id_check(class_id);
+    if (errr) throw errr;
 
     console.log(class_id);
-    const transac = await ModelTransaction.find({ class_id: class_id });
-    console.log(transac);
-    if (transac.length === 0) throw "  transaction not found";
-    res.status(200).send(`total: ${transac.length} ${transac} `);
+    const transactions = await ModelTransaction.find({ class_id: class_id });
+    console.log(transactions);
+    if (transactions.length === 0)
+      throw UTILS.MESSAGES.NO_MORE_ENTRIES_ARE_AVAILABLE;
+    res.status(200).send({
+      message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
+      Status_Code : 200,
+      result: transactions.length,
+      transactions,
+    });
   } catch (error) {
-    res.status(400).send("Something not right " + error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 
 async function Totalfee_of_last_days(req, res) {
   try {
     const class_id = req.query.class_id;
+
+    const from_date = req.query.from_date;
+    const to_date = req.query.to_date;
+
+    const startDate = new Date(from_date);
+    const endDate = new Date(to_date);
+
+    // endDate.setDate(endDate.getDate() + 1);
+    // console.log(startDate, "startdate");
+
+    
+    // console.log(class_id.length);
+    // const errr = helperFun.object_id_check(class_id);
+    // if (errr) throw errr;
+
     // console.log(class_id);
     var match_Condition;
     var Total = [];
@@ -80,17 +98,29 @@ async function Totalfee_of_last_days(req, res) {
         // console.log(data.createdAt, "created index 4");
       }
 
-      if (class_id == undefined) {
+      if (!class_id && !from_date && !to_date) {
+        console.log("if");
         match_Condition = { $match: { updatedAt: { $gte: date } } };
-      } else {
+      } else if(class_id && !from_date && !to_date){
+        console.log("else if 1");
         match_Condition = {
           $match: {
             updatedAt: { $gte: date },
             class_id: mongoose.Types.ObjectId(class_id),
           },
         };
+      }else if(class_id && from_date && to_date){
+        console.log("else if 2");
+        match_Condition = {
+          $match: {
+            updatedAt: { $gte: startDate, $lte: endDate },
+            class_id: mongoose.Types.ObjectId(class_id),
+          },
+        };
       }
+      console.log(match_Condition,"match")
       var result = await ModelTransaction.aggregate([
+      
         match_Condition,
         {
           $group: {
@@ -113,6 +143,7 @@ async function Totalfee_of_last_days(req, res) {
       }
       Total.push(result);
     }
+    console.log(match_Condition,"match")
 
     let PastDaysTotal = {
       Today: Total[2],
@@ -122,10 +153,14 @@ async function Totalfee_of_last_days(req, res) {
     };
     // console.log(result, "result");
     console.log(Total, "total ar");
-    
-    res.status(200).send(`total ${JSON.stringify(PastDaysTotal)}`);
+    res.status(200).send({
+      message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
+      Status_Code : 200,
+      result: PastDaysTotal,
+    });
   } catch (error) {
-    res.status(400).send("Something not right " + error);
+    console.log(error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 
@@ -141,15 +176,20 @@ async function filter_Bydatefun(req, res) {
     console.log(startDate, "startdate");
     console.log(endDate, "endate");
 
-    const find_bydate = await ModelSignupUser.find({
+    const transactions = await ModelTransaction.find({
       updatedAt: { $gte: startDate, $lte: endDate },
     });
 
-    if (find_bydate.length === 0)
-      throw " transactions not found of this date period";
-    res.status(200).send("total :" + find_bydate.length + find_bydate);
+    if (transactions.length === 0)
+      throw UTILS.MESSAGES.NO_MORE_ENTRIES_ARE_AVAILABLE;
+    res.status(200).send({
+      message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
+      Status_Code : 200,
+      result: transactions.length,
+      transactions,
+    });
   } catch (error) {
-    res.status(400).send("Something not right " + error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 
@@ -157,19 +197,25 @@ async function transaction_of_last_days(req, res) {
   try {
     const total_days = req.query.days;
 
-    if (total_days == 0) throw " please enter valid number of day";
+    if (total_days == 0) throw UTILS.MESSAGES.PLEASE_ENTER_VALID_NUMBER_OF_DAY;
     console.log(typeof total_days);
     let date = new Date();
     date.setDate(date.getDate() - total_days);
     console.log(date);
-    const findPay = await ModelTransaction.find({
+    const transactions = await ModelTransaction.find({
       updatedAt: { $lte: new Date(), $gte: date },
     });
-    if (findPay.length === 0)
-      throw ` no transactions are available of last ${total_days} days`;
-    res.status(200).send("total: " + findPay.length + findPay);
+    if (transactions.length === 0)
+      throw UTILS.MESSAGES.NO_MORE_ENTRIES_ARE_AVAILABLE;
+    // "total: " + findPay.length + findPay
+    res.status(200).send({
+      message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
+      Status_Code : 200,
+      result: transactions.length,
+      transactions,
+    });
   } catch (error) {
-    res.status(400).send("Something not right " + error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 
@@ -179,89 +225,105 @@ async function Pagination_transaction(req, res) {
     const limit = req.query.limit;
 
     if (page == 0 || limit == 0)
-      throw " page or limit value must greater than 0";
+      throw UTILS.MESSAGES.PAGE_OR_LIMIT_VALUE_MUST_GREATER_THAN_0;
 
     // console.log(page,limit);
-    const transac_history = await ModelTransaction.find()
+    const transaction_history = await ModelTransaction.find()
       .limit(limit)
       .skip((page - 1) * limit);
     // console.log(transac_history);
-    if (transac_history.length == 0) throw " no more entries are available";
+    if (transaction_history.length == 0)
+      throw UTILS.MESSAGES.NO_MORE_ENTRIES_ARE_AVAILABLE;
 
-    res.status(201).send("total : " + transac_history.length + transac_history);
+    res.status(200).send({
+      message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
+      Status_Code : 200,
+      result: transaction_history.length,
+      transaction_history,
+    });
   } catch (error) {
-    res.status(401).send("Something not right" + error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 
 async function Delete_classfun(req, res) {
   try {
     const class_id = req.params.id;
+    const errr = helperFun.object_id_check(class_id);
+    if (errr) throw errr;
     // console.log(_id);
     const find = await ModelClass.findOne({ _id: class_id });
-    if (!find) throw " class does  not exist ";
+    if (!find) throw UTILS.MESSAGES.DOES_NOT_EXIST;
 
     const deleted = await ModelClass.findByIdAndDelete(class_id);
-    res.status(201).send("Class deleted successfully ");
+    res.status(202).send({ message: UTILS.MESSAGES.DELETED_SUCCESSFULLY,Status_Code : 202});
   } catch (error) {
     // console.log("something not right" + error);
-    res.status(401).send("Something not right" + error);
+    res.status(400).send({ message: error,Status_Code : 400});
   }
 }
 
 async function Update_classfun(req, res) {
   try {
     const class_id = req.params.id;
+    const errr = helperFun.object_id_check(class_id);
+    if (errr) throw errr;
 
     const find = await ModelClass.findOne({ _id: class_id });
-    if (!find) throw " class does  not exist ";
+    if (!find) throw UTILS.MESSAGES.DOES_NOT_EXIST;
 
     const UserUpdated = await ModelClass.findByIdAndUpdate(class_id, req.body, {
       new: true,
     });
-    res.status(201).send("class Updated successfully");
+    res.status(201).send({ message: UTILS.MESSAGES.UPDATED_SUCCESSFULLY,Status_Code : 201 });
   } catch (error) {
     // console.log("something not right" + error);
-    res.status(401).send("Something not right" + error);
+    res.status(400).send({ message: error,Status_Code : 400});
   }
 }
 
 async function Delete_Userfun(req, res) {
   try {
     const user_id = req.params.id;
-    console.log(user_id);
+    // console.log(user_id.length);
+    const errr = helperFun.object_id_check(user_id);
+    if (errr) throw errr;
 
+    console.log(user_id);
     const find = await ModelNewUser.findOne({ _id: user_id });
-    if (!find) throw " User does  not exist ";
+    if (!find) throw UTILS.MESSAGES.DOES_NOT_EXIST;
 
     const deleted = await ModelNewUser.findByIdAndDelete(user_id);
-    res.status(201).send("User deleted successfully ");
+    res.status(200).send({ message: UTILS.MESSAGES.DELETED_SUCCESSFULLY,Status_Code : 200 });
   } catch (error) {
     // console.log("something not right" + error);
-    res.status(401).send("Something not right" + error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 
 async function Update_userfun(req, res) {
   try {
     const user_id = req.params.id;
+    const errr = helperFun.object_id_check(user_id);
+    if (errr) throw errr;
+
     const body = req.body;
     console.log(body);
     const find = await ModelNewUser.findOne({ _id: user_id });
-    if (!find) throw " User does  not exist ";
+    if (!find) throw UTILS.MESSAGES.DOES_NOT_EXIST;
 
-    // const UserUpdated = await ModelNewUser.updateOne({_id:user_id},$set:{})
     const UserUpdated = await ModelNewUser.findByIdAndUpdate(
       user_id,
       req.body,
-      {
-        new: true,
-      }
+      { new: true }
     );
-    res.status(201).send("User Updated successfully");
+    res.status(201).send({
+      message: UTILS.MESSAGES.UPDATED_SUCCESSFULLY,
+      Status_Code : 201,
+    });
   } catch (error) {
     // console.log("something not right" + error);
-    res.status(401).send("Something not right" + error);
+    res.status(400).send({ message: error,Status_Code : 400});
   }
 }
 
@@ -282,18 +344,18 @@ async function Trans_historyfun(req, res) {
     console.log(remaining_fee.due_fee);
     const due_fee = remaining_fee.due_fee;
 
-    if (feetype == 1) {
+    if (feetype === 1) {
       const balancefee = add_fee - fee;
       const Updatefee = await ModelNewStudent.findByIdAndUpdate(id, {
         due_fee: balancefee,
       });
-    } else if (feetype == 2) {
+    } else if (feetype === 2) {
       const balancefee = mon_fee - fee;
       const total_fee = due_fee + balancefee;
       const Updatefee = await ModelNewStudent.findByIdAndUpdate(id, {
         due_fee: total_fee,
       });
-    } else if (feetype == 3) {
+    } else if (feetype === 3) {
       const total_due = due_fee - fee;
       const Updatefee = await ModelNewStudent.findByIdAndUpdate(id, {
         due_fee: total_due,
@@ -301,16 +363,38 @@ async function Trans_historyfun(req, res) {
     }
 
     const Transac_saved = await ModelTransaction(Transac_details).save();
-    res.status(201).send("Transac_saved" + Transac_saved);
+
+    res.status(201).send({
+      message: UTILS.MESSAGES.TRANSACTION_SUCCESSFULL,
+      Status_Code : 201,
+      // result:Transac_saved
+    });
   } catch (error) {
-    res.status(401).send(error);
+    console.log(error.name, "err name");
+    if (error.name === "ValidationError" || error.code === 11000) {
+      // Duplicate username
+      res.status(422).send({ message: error.message,Status_Code : 422});
+    } else {
+      res.status(400).send({ message: error ,Status_Code : 400});
+    }
   }
 }
 
 async function SingleUserDetail(req, res) {
-  const user_id = req.body.user_id;
-  // console.log(user_id);
-
+  try {
+    const user_id = req.params.id;
+    const errr = helperFun.object_id_check(user_id);
+    if (errr) throw errr;
+    // console.log(user_id);
+    const userdata = await ModelNewUser.find({ _id: user_id }, { password: 0 });
+    res.status(200).send({
+      message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
+      Status_Code : 200,
+      result: userdata,
+    });
+  } catch (error) {
+    res.status(400).send({ message: error,Status_Code : 400});
+  }
   //  try {
 
   //   const data = await ModelNewStudent.aggregate([
@@ -339,26 +423,26 @@ async function SingleUserDetail(req, res) {
   // } catch (error) {
   //   res.status(400).send(error)
   // }
-
-  try {
-    const userdata = await ModelNewUser.find({ _id: user_id }, { password: 0 });
-    res.status(201).send(userdata);
-  } catch (error) {
-    res.status(401).send(error);
-  }
 }
 
 async function AllStudentOfOneClass(req, res) {
-  const classid = req.body.class_id;
-
   try {
-    const OneStd_Data = await ModelNewStudent.find(
+    const classid = req.params.id;
+    console.log(classid);
+    const errr = helperFun.object_id_check(classid);
+    if (errr) throw errr;
+
+    const OneStdudent_Data = await ModelNewStudent.find(
       { class_id: classid },
       { class_id: 0 }
     );
-    res.status(201).send(OneStd_Data);
+    res.status(200).send({
+      message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
+      Status_Code : 200,
+      result: OneStdudent_Data,
+    });
   } catch (error) {
-    res.status(401).send(error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 
@@ -368,18 +452,29 @@ async function get_classes(req, res) {
       {},
       { addmission_fee: 0, monthly_fee: 0 }
     );
-    res.status(201).send(get_classes);
+    res.status(200).send({
+      message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
+      Status_Code : 200,
+      result: get_classes,
+    });
   } catch (error) {
-    res.status(401).send(error);
+    res.status(401).send({ message: error,Status_Code : 401 });
   }
 }
 
 async function User_detailsfun(req, res) {
   try {
-    const userDetails = await ModelNewUser.find({ role: 3 }, "name mobile_num");
-    res.status(200).send(userDetails);
+    const users_details = await ModelNewUser.find(
+      { role: 3 },
+      "name mobile_num"
+    );
+    res.status(200).send({
+      message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
+      Status_Code : 200,
+      result: users_details,
+    });
   } catch (error) {
-    res.status(401).send(error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 
@@ -397,7 +492,7 @@ async function Student_addfun(req, res) {
     // console.log(finduser, "find user");
     if (finduser.length > 0) {
       console.log("already");
-      throw "student already registered with same class";
+      throw UTILS.MESSAGES.STUDENT_ALREADY_REGISTERED_WITH_SAME_CLASS;
     } else if (finduser.length == 0) {
       const countt = await ModelNewStudent.find({
         class_id: body.class_id,
@@ -405,22 +500,30 @@ async function Student_addfun(req, res) {
       // console.log(countt,"same class count");
 
       Object.assign(body, { roll_num: class_count * 1000 + 1 + countt });
-      const savedata = await ModelNewStudent(body).save();
-      res.status(201).send("Student added successfully" + savedata);
+      const Store_Student = await ModelNewStudent(body).save();
+      res.status(201).send({
+        message: UTILS.MESSAGES.STUDENT_REGISTERED_SUCCESSFULLY,
+        Status_Code : 201,
+        result: Store_Student,
+      });
     }
   } catch (error) {
-    res.status(401).send(error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 async function Add_Classfun(req, res) {
   try {
     let Class_Data = req.body;
     const AllClass = await ModelClass.findOne({ class: Class_Data.class });
-    if (AllClass) throw " class already registered";
+    if (AllClass) throw UTILS.MESSAGES.CLASS_ALREADY_REGISTERED;
     const Data_Saved = await ModelClass(Class_Data).save();
-    res.status(201).send("Class add Successfully" + Data_Saved);
+    res.status(201).send({
+      message: UTILS.MESSAGES.CLASS_REGISTERED_SUCCESSFULLY,
+      Status_Code : 201,
+      result: Data_Saved,
+    });
   } catch (error) {
-    res.status(401).send("err" + error);
+    res.status(400).send({ message: error,Status_Code : 400 });
   }
 }
 async function Newstd_Userfun(req, res) {
@@ -439,26 +542,53 @@ async function Newstd_Userfun(req, res) {
 
     const finduser = await ModelNewUser.findOne({ email: email });
     console.log(finduser);
-    if (finduser) throw " User Already Registered";
+    if (finduser) throw UTILS.MESSAGES.USER_ALREADY_REGISTERED;
     User_data.password = await bcrypt.hash(User_data.password, salt);
     // const student_img = req.file.path;
     // Student_Data.student_img = student_img;
 
     Object.assign(User_data, { username: "PS" + yearcode + usercode });
 
-    const Student_Saved = await ModelNewUser(User_data).save();
-    res.status(201).send("Student Registered" + Student_Saved);
+    const Student_Saved = await ModelNewUser(User_data).save(
+      function (err,success) {
+      // console.log(success,"success");
+      if (err) {
+        console.log(err.name, "err");
+        // console.log(err.code, "err");
+        if (err.name === "MongoServerError" || err.code === 11000) {
+          // Duplicate username
+          return res
+            .status(422)
+            .send({
+              message: UTILS.MESSAGES.NUMBER_ALREADY_REGISTERED,
+              Status_Code : 422
+             });
+        }else{
+          return res.status(400).send({ 
+            message: err.message,
+            Status_Code : 400
+          });
+        }
+      } else {
+        console.log("sucess");
+        // {
+        //   message: UTILS.MESSAGES.USER_REGISTERED_SUCCESSFULLY,
+        //   Status_Code : 201,
+        //   result: success,
+        // }
+        const errnew = new helperFun.error_Object(UTILS.MESSAGES.USER_REGISTERED_SUCCESSFULLY,201,"User register successfully")
+        return res.status(201).send(errnew);
+      }
+    });
+    // res.status(201).send("Student Registered " + Student_Saved);
   } catch (error) {
     console.log(error);
-    res.status(400).send("error" + error);
+    res.status(400).send({
+       message: error ,
+       Status_Code : 400,
+      });
   }
 }
-
-
-
-
-
-
 
 // try {
 //   var Total = []

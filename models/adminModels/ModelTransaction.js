@@ -4,9 +4,11 @@ const NewTransactionSchema = new Schema({
   fee_type: {
     type: Number,
     enum: [1,2,3,4],
+    required:true
   },
   fee_amount: {
     type: Number,
+    required:true
   },
   student_id: {
     type: Schema.Types.ObjectId,

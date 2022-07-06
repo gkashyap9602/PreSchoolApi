@@ -4,6 +4,8 @@ const Controller = require('../../controllers/index')
 // const UploadFile = require('../../../Services/index')
 const { FileUpload } = require('../../../Services/index')
 
+
+
 router.get('/helloadmin',Controller.AdminController.helloadmin)
 
 router.post('/user/create',FileUpload.multerAdmin.single('student_img'),Controller.AdminController.Newstd_Userfun)
@@ -17,16 +19,18 @@ router.delete('/class/delete/:id',Controller.AdminController.Delete_classfun)
 router.post('/student/create',FileUpload.multerAdmin.single('img'),Controller.AdminController.Student_addfun)
 
 router.get('/users',Controller.AdminController.User_detailsfun)
-router.get('/oneuser',Controller.AdminController.SingleUserDetail)
+router.get('/users/:id',Controller.AdminController.SingleUserDetail)
 
 router.get('/classes',Controller.AdminController.get_classes)
-router.get('/oneclassdata',Controller.AdminController.AllStudentOfOneClass)
+router.get('/classes/:id',Controller.AdminController.AllStudentOfOneClass)
 
 router.post('/transaction/create',Controller.AdminController.Trans_historyfun)
 router.get('/transaction/history',Controller.AdminController.Pagination_transaction)
+router.get('/transaction/history/:id',Controller.AdminController.Filter_transac_by_class)
 router.get('/transaction/filter/pastdays',Controller.AdminController.transaction_of_last_days)
 router.get('/transaction/filter/bydate',Controller.AdminController.filter_Bydatefun)
 router.get('/transaction/filter/totalfee',Controller.AdminController.Totalfee_of_last_days)
-router.get('/transaction/filter/class',Controller.AdminController.Filter_transac_by_class)
+
+
 
 module.exports = router;

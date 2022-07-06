@@ -5,7 +5,14 @@ const route = require('./MainRoutes')
 const bodyParser = require('body-parser')
 const path = require('path')
 const app = express()
+// const mongoose = require('mongoose')
+require('express-async-errors')
+const middleware = require('./Utils/index')
+
+
 const cors = require('cors')
+
+
 app.listen(config.port,()=>{
     console.log(`Server is running on ${config.port}`);
 })
@@ -14,7 +21,14 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('views'));
+
+// require('express-async-errors')
+
 // app.use('/static', express.static(path.join(__dirname, './views')));
 app.use(cors());
 //app.use(multer().array())
+
 app.use('/api/v1', route);
+
+app.use(middleware.middleware.errCreate)
+app.use(middleware.middleware.routeErr)
