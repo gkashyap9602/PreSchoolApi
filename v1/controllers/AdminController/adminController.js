@@ -470,7 +470,7 @@ async function User_detailsfun(req, res) {
   try {
     const users_details = await ModelNewUser.find(
       { role: 3 },
-      "name mobile_num"
+      "father_name mobile_num"
     );
     res.status(200).send({
       message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
