@@ -9,7 +9,7 @@ const req = require("express/lib/request");
 const { ModelTransaction,} = require("../../../models/adminModels/ModelTransaction");
 const res = require("express/lib/response");
 const UTILS = require("../../../Utils/messages");
-const helperFun = require("../../../Utils/helperFun");
+const {error_Object,response_Object,object_id_check} = require("../../../Utils/helperFun");
 
 exports.Newstd_Userfun = Newstd_Userfun;
 exports.Add_Classfun = Add_Classfun;
@@ -39,7 +39,7 @@ async function helloadmin(req, res) {
 async function Filter_transac_by_class(req, res) {
   try {
     const class_id = req.params.id;
-    const errr = helperFun.object_id_check(class_id);
+    const errr = object_id_check(class_id);
     if (errr) throw errr;
 
     console.log(class_id);
@@ -73,7 +73,7 @@ async function Totalfee_of_last_days(req, res) {
 
     
     // console.log(class_id.length);
-    // const errr = helperFun.object_id_check(class_id);
+    // const errr = object_id_check(class_id);
     // if (errr) throw errr;
 
     // console.log(class_id);
@@ -117,6 +117,8 @@ async function Totalfee_of_last_days(req, res) {
             class_id: mongoose.Types.ObjectId(class_id),
           },
         };
+      }else if(!class_id && from_date && to_date){
+        throw "Please Enter Class Id with Session (from and to date)"
       }
       console.log(match_Condition,"match")
       var result = await ModelTransaction.aggregate([
@@ -249,7 +251,7 @@ async function Pagination_transaction(req, res) {
 async function Delete_classfun(req, res) {
   try {
     const class_id = req.params.id;
-    const errr = helperFun.object_id_check(class_id);
+    const errr = object_id_check(class_id);
     if (errr) throw errr;
     // console.log(_id);
     const find = await ModelClass.findOne({ _id: class_id });
@@ -266,7 +268,7 @@ async function Delete_classfun(req, res) {
 async function Update_classfun(req, res) {
   try {
     const class_id = req.params.id;
-    const errr = helperFun.object_id_check(class_id);
+    const errr = object_id_check(class_id);
     if (errr) throw errr;
 
     const find = await ModelClass.findOne({ _id: class_id });
@@ -286,7 +288,7 @@ async function Delete_Userfun(req, res) {
   try {
     const user_id = req.params.id;
     // console.log(user_id.length);
-    const errr = helperFun.object_id_check(user_id);
+    const errr = object_id_check(user_id);
     if (errr) throw errr;
 
     console.log(user_id);
@@ -304,7 +306,7 @@ async function Delete_Userfun(req, res) {
 async function Update_userfun(req, res) {
   try {
     const user_id = req.params.id;
-    const errr = helperFun.object_id_check(user_id);
+    const errr = object_id_check(user_id);
     if (errr) throw errr;
 
     const body = req.body;
@@ -337,10 +339,12 @@ async function Trans_historyfun(req, res) {
     const feetype = Transac_details.fee_type;
 
     const findfee = await ModelClass.findOne({ _id: Transac_details.class_id });
+    if(!findfee) throw "class not exist"
     const add_fee = findfee.addmission_fee;
     const mon_fee = findfee.monthly_fee;
 
     const remaining_fee = await ModelNewStudent.findOne({ _id: id });
+    if(!remaining_fee) throw "student not exist"
     console.log(remaining_fee.due_fee);
     const due_fee = remaining_fee.due_fee;
 
@@ -383,7 +387,7 @@ async function Trans_historyfun(req, res) {
 async function SingleUserDetail(req, res) {
   try {
     const user_id = req.params.id;
-    const errr = helperFun.object_id_check(user_id);
+    const errr = object_id_check(user_id);
     if (errr) throw errr;
     // console.log(user_id);
     const userdata = await ModelNewUser.find({ _id: user_id }, { password: 0 });
@@ -429,7 +433,7 @@ async function AllStudentOfOneClass(req, res) {
   try {
     const classid = req.params.id;
     console.log(classid);
-    const errr = helperFun.object_id_check(classid);
+    const errr = object_id_check(classid);
     if (errr) throw errr;
 
     const OneStdudent_Data = await ModelNewStudent.find(
@@ -576,7 +580,7 @@ async function Newstd_Userfun(req, res) {
         //   Status_Code : 201,
         //   result: success,
         // }
-        const errnew = new helperFun.error_Object(UTILS.MESSAGES.USER_REGISTERED_SUCCESSFULLY,201,"User register successfully")
+        const errnew = new error_Object(UTILS.MESSAGES.USER_REGISTERED_SUCCESSFULLY,201,"User register successfully")
         return res.status(201).send(errnew);
       }
     });

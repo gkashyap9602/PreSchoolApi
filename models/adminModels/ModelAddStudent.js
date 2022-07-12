@@ -22,7 +22,7 @@ const NewStudentSchema = new Schema({
     type: Boolean,
   },
   due_fee:{
-    type:Number,default:0
+    type:Number,default:0,enum:[1,2,3]
   }
 });
 

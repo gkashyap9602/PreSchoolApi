@@ -31,6 +31,4 @@ router.get('/transaction/filter/pastdays',Controller.AdminController.transaction
 router.get('/transaction/filter/bydate',Controller.AdminController.filter_Bydatefun)
 router.get('/transaction/filter/totalfee',Controller.AdminController.Totalfee_of_last_days)
 
-
-
 module.exports = router;

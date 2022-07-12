@@ -4,8 +4,12 @@ const NewUsersSchema = new Schema({
   role:{
     type:Number,enum:[1,2,3]
 },
-  name: {
+  fname: {
     type: String,
+    required:true
+  },
+  lname:{
+     type:String
   },
   email:{
      type:String,
