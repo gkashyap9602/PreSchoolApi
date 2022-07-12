@@ -391,6 +391,7 @@ async function SingleUserDetail(req, res) {
     if (errr) throw errr;
     // console.log(user_id);
     const userdata = await ModelNewUser.find({ _id: user_id }, { password: 0 });
+    if(userdata.length === 0) throw "User Not Exist"
     res.status(200).send({
       message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
       Status_Code : 200,
@@ -440,6 +441,7 @@ async function AllStudentOfOneClass(req, res) {
       { class_id: classid },
       { class_id: 0 }
     );
+    if(OneStdudent_Data.length === 0) throw "Class Not Exist"
     res.status(200).send({
       message: UTILS.MESSAGES.DATA_RETREIVE_SUCCESSFULLY,
       Status_Code : 200,
@@ -518,7 +520,7 @@ async function Student_addfun(req, res) {
 async function Add_Classfun(req, res) {
   try {
     let Class_Data = req.body;
-    const AllClass = await ModelClass.findOne({ class: Class_Data.class });
+    const AllClass = await ModelClass.findOne({ class: Class_Data.class});
     if (AllClass) throw UTILS.MESSAGES.CLASS_ALREADY_REGISTERED;
     const Data_Saved = await ModelClass(Class_Data).save();
     res.status(201).send({
